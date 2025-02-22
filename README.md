@@ -1,31 +1,56 @@
-# PREP2PRO  
+# Video Editor with Local Version Control
 
-**Prep2Pro** is an AI-powered interview simulation and preparation platform designed to bridge the gap between traditional training methods and real-world interview experiences. By integrating AI-driven simulations, domain-specific skill-building, and resume optimization, Prep2Pro ensures that candidates are fully equipped to excel in job placements.  
+A lightweight, single-user video editing software with built-in version control for managing edits locally. Save, track, and revert changes just like Git, but for video projects!
 
-## Standout Features  
+## Features
 
-### Real-Time Response-Based Questions  
-Prep2Pro employs an advanced AI-driven interview system powered by **Retrieval-Augmented Generation (RAG)** to create an interactive and dynamic interview experience. Unlike static question banks, our system:  
-- Analyzes user responses and generates **contextually relevant follow-up questions** in real time.  
-- Uses **Speech-to-Text (STT) and Text-to-Speech (TTS)** to facilitate verbal responses, enhancing **fluency, communication skills, and confidence** for real interviews.  
+### Basic Video Editing
+- Cut, trim, and merge video clips.
+- Add text, effects, and transitions.
+- Timeline-based editing interface.
 
-### Domain-Based Skilling  
-Prep2Pro provides a structured learning path tailored to industry-relevant skills:  
-- Offers **a well-defined roadmap** with clear skill development milestones.  
-- Provides **curated learning resources** (both text-based and video content) for **free**.  
-- Ensures candidates systematically build expertise in their chosen domain to stay **aligned with industry demands**.  
+### Local Version Control
+- **Commit**: Save snapshots of your project at different stages.
+- **Branch**: Create branches to experiment with different edits.
+- **Merge**: Combine changes from different branches.
+- **Diff**: Visualize changes between versions.
+- **Revert**: Roll back to any previous version.
 
-### Code Enhancement & Optimization  
-Beyond just writing functional programs, Prep2Pro helps candidates write **efficient and optimized** code:  
-- Includes an **in-built code editor** that suggests **optimizations and best practices**.  
-- Identifies **inefficiencies** in user-written code and provides actionable **performance improvements**.  
-- Helps users develop strong coding skills to tackle **technical interviews confidently**.  
+### Lightweight and Offline
+- All data is stored locally on your device.
+- No cloud storage or internet connection required.
 
-### In-Built ATS Scanner for Resume Optimization  
-Many resumes fail to reach recruiters due to **poor ATS compliance**. Prep2Pro addresses this with:  
-- An **ATS Scanner** that analyzes resumes and provides a **match score** against job descriptions.  
-- **Step-by-step recommendations** to improve keyword optimization, formatting, and skill gaps.  
-- Ensures candidates create **ATS-friendly resumes** that increase job application success.  
+### User-Friendly Interface
+- Intuitive UI designed for single-user workflows.
 
-## Get Started  
-Prep2Pro is built to help candidates **ace interviews and secure their dream jobs** with AI-powered assistance. Stay ahead in your preparation and **elevate your career today!**  
+## How Version Control Works
+
+### Commits
+- Each commit saves the current state of the timeline, applied effects, and other project metadata.
+- Only differences (deltas) are stored to save space.
+
+### Branches
+- Experiment with edits without affecting the main timeline.
+- Example: Create a `feature-intro` branch for a new intro animation.
+
+### Merging
+- Merge branches to combine changes.
+- Conflicts (e.g., overlapping edits) are resolved manually.
+
+### Diffs
+- Visualize changes between versions (e.g., added/deleted clips, timeline adjustments).
+
+## Supported Video Formats
+- **Input**: MP4, AVI, MOV, MKV, and more.
+- **Output**: MP4 (default), customizable in settings.
+
+## Limitations
+- **Storage**: Ensure your device has enough storage for large video files.
+- **Performance**: Editing large videos may require a powerful machine.
+- **Single-User**: Designed for personal use only; no collaboration features.
+
+## Contributing
+This is a personal project, but contributions are welcome. Feel free to fork the repository and submit a pull request.
+
+
+
