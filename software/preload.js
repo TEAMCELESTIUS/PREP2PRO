@@ -7,3 +7,10 @@ contextBridge.exposeInMainWorld('versions', {
   ping: () => ipcRenderer.invoke('ping')
   // we can also expose variables, not just functions
 })
+
+contextBridge.exposeInMainWorld('electronAPI', {
+    handleFileOpen: async () => {
+        const result = await ipcRenderer.invoke('dialog:openFile')
+        return result
+    }
+})

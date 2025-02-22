@@ -1,17 +1,87 @@
-const { app, BrowserWindow, ipcMain } = require('electron/main')
+const { app, BrowserWindow, ipcMain, dialog } = require('electron/main')
 const path = require('node:path')
 
 const createWindow = () => {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1920,
+    height: 1080,
+    minWidth: 800,
+    minHeight: 600,
+    frame: true,
+    fullscreen: false,
+    maximizable: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true
+    },
+    title: 'Video Editor'
+  })
+
+  // Handle file open dialog with expanded format support
+  ipcMain.handle('dialog:openFile', async () => {
+    try {
+      const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+        title: 'Select Video File',
+        defaultPath: app.getPath('videos'), // Default to videos folder
+        properties: [
+          'openFile',
+          'dontAddToRecent'  // Don't add to recent documents
+        ],
+        filters: [
+          { 
+            name: 'Video Files',
+            extensions: [
+              // Common formats with AVI variants
+              'mp4', 'mov', 'avi', 'wmv', 'mkv', 'flv',
+              'webm', 'mpeg', 'mpg', '3gp', 'm4v',
+              // AVI specific formats
+              'avi', 'divx', 'xvid',
+              // Upper case variants
+              'MP4', 'MOV', 'AVI', 'WMV', 'MKV', 'FLV',
+              'WEBM', 'MPEG', 'MPG', '3GP', 'M4V',
+              'AVI', 'DIVX', 'XVID'
+            ]
+          },
+          { name: 'All Files', extensions: ['*'] }
+        ]
+      })
+
+      if (canceled) {
+        return null
+      }
+
+      return filePaths[0]
+    } catch (err) {
+      console.error('Error in file dialog:', err)
+      return null
     }
   })
+
+  // Load the app and maximize the window
   win.loadFile('index.html')
+  win.maximize()
+
+  // Set custom title bar color (optional)
+  win.setBackgroundColor('#2e2c29')
 }
+
+// Create window when app is ready
 app.whenReady().then(() => {
   ipcMain.handle('ping', () => 'pong')
   createWindow()
+
+  // On macOS, recreate window when dock icon is clicked
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow()
+    }
+  })
+})
+
+// Quit when all windows are closed
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
 })
