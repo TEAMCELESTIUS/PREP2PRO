@@ -5,7 +5,7 @@ const func = async () => {
 
 func()
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const dropZone = document.getElementById('drop-zone');
     const videoElement = document.getElementById('main-video');
     const importBtn = document.getElementById('import-btn');
@@ -107,6 +107,104 @@ document.addEventListener('DOMContentLoaded', () => {
         return /\.(mp4|mov|avi|divx|xvid|wmv|mkv|flv|webm|mpeg|mpg|3gp|m4v)$/i.test(file);
     }
 
+    // Update the loadSavedState function to be more reliable
+    async function loadSavedState() {
+        try {
+            const savedState = await window.electronAPI.loadState();
+            if (savedState && savedState.videoPath) {
+                // Check if file exists and is accessible
+                try {
+                    const response = await fetch('file://' + savedState.videoPath);
+                    if (!response.ok) throw new Error('File not accessible');
+                    
+                    // Load the video
+                    handleVideoFile(savedState.videoPath);
+                    
+                    // Wait for video to load
+                    await new Promise((resolve, reject) => {
+                        const timeoutId = setTimeout(() => reject(new Error('Video load timeout')), 5000);
+                        
+                        videoElement.addEventListener('loadedmetadata', () => {
+                            clearTimeout(timeoutId);
+                            resolve();
+                        }, { once: true });
+                        
+                        videoElement.addEventListener('error', () => {
+                            clearTimeout(timeoutId);
+                            reject(new Error('Video load failed'));
+                        }, { once: true });
+                    });
+
+                    // Restore all saved settings
+                    if (savedState.currentTime) {
+                        videoElement.currentTime = Math.min(savedState.currentTime, videoElement.duration);
+                    }
+                    
+                    if (typeof savedState.volume !== 'undefined') {
+                        videoElement.volume = savedState.volume;
+                        videoControls.volumeSlider.value = savedState.volume;
+                    }
+                    
+                    if (savedState.muted) {
+                        videoElement.muted = savedState.muted;
+                        updateVolumeIcon(savedState.muted ? 0 : savedState.volume);
+                    }
+
+                    console.log('Restored video state:', {
+                        path: savedState.videoPath,
+                        time: savedState.currentTime,
+                        volume: savedState.volume,
+                        muted: savedState.muted
+                    });
+                } catch (error) {
+                    console.warn('Could not restore last video:', error);
+                    resetVideoDisplay();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading saved state:', error);
+        }
+    }
+
+    // Update saveCurrentState to be more comprehensive
+    function saveCurrentState() {
+        if (!videoElement.src) return; // Don't save if no video is loaded
+        
+        const state = {
+            videoPath: videoElement.src.startsWith('file://') ? 
+                decodeURI(videoElement.src.replace('file://', '')) : null,
+            currentTime: videoElement.currentTime,
+            duration: videoElement.duration,
+            volume: videoElement.volume,
+            muted: videoElement.muted,
+            timestamp: Date.now() // Add timestamp for debugging
+        };
+        
+        console.log('Saving state:', state);
+        window.electronAPI.saveState(state);
+    }
+
+    // Add more frequent state saving for better reliability
+    function setupStateSaving() {
+        // Save state every 2 seconds while playing
+        setInterval(() => {
+            if (!videoElement.paused) {
+                saveCurrentState();
+            }
+        }, 2000);
+
+        // Save on various video events
+        videoElement.addEventListener('pause', saveCurrentState);
+        videoElement.addEventListener('volumechange', saveCurrentState);
+        videoElement.addEventListener('seeked', saveCurrentState);
+        
+        // Save when closing
+        window.addEventListener('beforeunload', (e) => {
+            saveCurrentState();
+        });
+    }
+
+    // Update handleVideoFile to work better with state restoration
     function handleVideoFile(file) {
         hasError = false;
         videoElement.onerror = null;
@@ -114,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const videoUrl = file instanceof File ? URL.createObjectURL(file) : file;
         
         videoElement.onerror = (e) => {
+            console.error('Video error:', e);
             if (!hasError) {
                 hasError = true;
                 alert('Error: Unable to load video file. Please check if the format is supported.');
@@ -124,26 +223,15 @@ document.addEventListener('DOMContentLoaded', () => {
         videoElement.onloadeddata = () => {
             console.log('Video loaded successfully');
             hasError = false;
-            
-            // Ensure volume is set correctly
-            const volume = parseFloat(videoControls.volumeSlider.value);
-            videoElement.volume = volume;
-            videoElement.muted = false;
-            updateVolumeIcon(volume);
-
-            // Initialize time display
-            videoControls.duration.textContent = formatTime(videoElement.duration);
-            videoControls.currentTime.textContent = formatTime(0);
+            saveCurrentState(); // Save state immediately after successful load
         };
 
         try {
             videoElement.src = videoUrl;
             videoWrapper.style.display = 'block';
             dropZone.style.display = 'none';
-            
-            // Ensure volume is set immediately
-            videoElement.volume = parseFloat(videoControls.volumeSlider.value);
         } catch (error) {
+            console.error('Error handling video file:', error);
             resetVideoDisplay();
         }
     }
@@ -290,4 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
         seconds = Math.floor(seconds % 60);
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
+
+    setupStateSaving(); // Setup state saving
+    await loadSavedState(); // Load saved state
 });

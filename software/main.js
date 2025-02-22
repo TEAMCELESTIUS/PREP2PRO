@@ -1,5 +1,31 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron/main')
 const path = require('node:path')
+const fs = require('fs')
+
+// Add state management
+const STATE_FILE = path.join(app.getPath('userData'), 'video-state.json')
+
+// Function to save state
+async function saveState(state) {
+  try {
+    await fs.promises.writeFile(STATE_FILE, JSON.stringify(state, null, 2))
+  } catch (err) {
+    console.error('Error saving state:', err)
+  }
+}
+
+// Function to load state
+async function loadState() {
+  try {
+    if (fs.existsSync(STATE_FILE)) {
+      const data = await fs.promises.readFile(STATE_FILE, 'utf8')
+      return JSON.parse(data)
+    }
+  } catch (err) {
+    console.error('Error loading state:', err)
+  }
+  return null
+}
 
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -56,6 +82,15 @@ const createWindow = () => {
       console.error('Error in file dialog:', err)
       return null
     }
+  })
+
+  // Add IPC handlers for state management
+  ipcMain.handle('state:save', async (_, state) => {
+    await saveState(state)
+  })
+
+  ipcMain.handle('state:load', async () => {
+    return await loadState()
   })
 
   // Load the app and maximize the window

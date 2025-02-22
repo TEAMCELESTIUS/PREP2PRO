@@ -9,8 +9,7 @@ contextBridge.exposeInMainWorld('versions', {
 })
 
 contextBridge.exposeInMainWorld('electronAPI', {
-    handleFileOpen: async () => {
-        const result = await ipcRenderer.invoke('dialog:openFile')
-        return result
-    }
+    handleFileOpen: () => ipcRenderer.invoke('dialog:openFile'),
+    saveState: (state) => ipcRenderer.invoke('state:save', state),
+    loadState: () => ipcRenderer.invoke('state:load')
 })
